@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhysicsLab - Interactive Physics Platform</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- KaTeX for Math Formulas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #151c2c;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-pink: #ec4899;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-red: #ef4444;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Header Navigation */
+        header {
+            background: rgba(21, 28, 44, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .logo-title span { color: var(--accent-blue); }
+        nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .nav-btn {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .nav-btn.active, .nav-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            border-color: var(--accent-blue);
+        }
+        .tracker-badge {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        /* Container Layout */
+        .container {
+            max-width: 1400px;
+            margin: 1.5rem auto;
+            padding: 0 1.5rem;
+            width: 100%;
+            flex: 1;
+        }
+        .page-view { display: none; }
+        .page-view.active { display: block; }
+        /* Welcome Banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .welcome-banner h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #3b82f6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .welcome-banner p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 800px;
+        }
+        .btn-start-hero {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 800;
+            padding: 0.9rem 2.2rem;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+        .btn-start-hero:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.6);
+        }
+        /* Dashboard Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        /* Filter Buttons */
+        .category-filter {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .cat-btn {
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.5rem 1.2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .cat-btn.active, .cat-btn:hover {
+            background: var(--accent-purple);
+            color: #fff;
+            border-color: var(--accent-purple);
+        }
+        /* Grid Layout for Modules */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 2rem;
+        }
+        @media (max-width: 550px) {
+            .modules-grid { grid-template-columns: 1fr; }
+        }
+        /* Card Styles */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            position: relative;
+        }
+        .card:fullscreen {
+            background-color: var(--bg-color);
+            padding: 2rem;
+            overflow-y: auto;
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 1.5rem;
+        }
+        .card:fullscreen .card-header { grid-column: 1 / -1; }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .fullscreen-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .fullscreen-btn:hover { background: var(--accent-blue); }
+        /* Canvas Container */
+        .canvas-container {
+            width: 100%;
+            height: 250px;
+            background-color: #090d16;
+            border-radius: 12px;
+            border: 1px solid #2a364f;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+        /* Controls Area */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            background: rgba(11, 15, 25, 0.6);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .control-row label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        input[type="range"] {
+            accent-color: var(--accent-blue);
+            cursor: pointer;
+            flex: 1;
+            max-width: 200px;
+        }
+        .btn-action {
+            background: var(--accent-blue);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-action:hover { opacity: 0.9; }
+        .stats-box {
+            display: flex;
+            justify-content: space-around;
+            background-color: #090d16;
+            padding: 0.75rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-value { font-size: 1.1rem; font-weight: 800; }
+        .val-pink { color: var(--accent-pink); }
+        .val-green { color: var(--accent-green); }
+        .val-yellow { color: var(--accent-yellow); }
+        .val-blue { color: var(--accent-blue); }
+        .val-cyan { color: var(--accent-cyan); }
+        .val-purple { color: var(--accent-purple); }
+        /* Formula Box */
+        .formula-box {
+            background: rgba(9, 13, 22, 0.8);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+        }
+        .formula-main {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+        .formula-box ul {
+            list-style: none;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+        .formula-box ul li { margin-bottom: 0.25rem; }
+        /* Links Section */
+        .helpful-links-container {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .links-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+        .link-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(6, 182, 212, 0.08);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .link-grid a:hover {
+            background: var(--accent-cyan);
+            color: #000;
+        }
+        /* Calculator Styles */
+        .calc-wrapper {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .calc-display {
+            width: 100%;
+            height: 50px;
+            background: #090d16;
+            border: 1px solid #2a364f;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.6rem;
+            text-align: right;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+        .calc-btn {
+            background: #1e293b;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 0.8rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .calc-btn.op { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
+        .calc-btn.fn { background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
+        .calc-btn.clear { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        /* Music Player Styles */
+        .music-wrapper {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.08);
+            text-align: center;
+        }
+        .track-info { margin-bottom: 1rem; }
+        .track-title { font-size: 1.25rem; font-weight: 800; color: var(--accent-pink); }
+        .track-artist { color: var(--text-secondary); font-size: 0.88rem; }
+        .visualizer-box {
+            height: 60px;
+            background: #090d16;
+            border-radius: 12px;
+            border: 1px solid #2a364f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 1rem;
+        }
+        .v-bar {
+            width: 6px;
+            height: 20%;
+            background: var(--accent-purple);
+            border-radius: 3px;
+        }
+        .v-bar.active {
+            animation: bounce 0.6s infinite alternate ease-in-out;
+        }
+        @keyframes bounce {
+            0% { height: 15%; background: var(--accent-purple); }
+            100% { height: 85%; background: var(--accent-pink); }
+        }
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .audio-btn {
+            background: #1e293b;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .audio-btn.play-btn {
+            background: var(--accent-blue);
+            width: 55px;
+            height: 55px;
+            font-size: 1.4rem;
+        }
+        .playlist { display: flex; flex-direction: column; gap: 0.5rem; text-align: left; }
+        .playlist-item {
+            background: #090d16;
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .playlist-item.active {
+            border-color: var(--accent-pink);
+            background: rgba(236, 72, 153, 0.1);
+        }
+        /* Notes Area */
+        .notes-wrapper {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .notes-area {
+            width: 100%;
+            height: 180px;
+            background: #090d16;
+            color: var(--text-primary);
+            border: 1px solid #2a364f;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            resize: vertical;
+        }
+        /* Quizzes */
+        .quiz-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1.2rem;
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .quiz-card.hidden { display: none !important; }
+        .quiz-question { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.8rem; }
+        .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+        .quiz-option-label {
+            background: #090d16;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid #2a364f;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .quiz-submit-btn {
+            background: var(--accent-green);
+            color: #fff;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-title">
+            ⚛️ <span>PhysicsLab</span>
+        </div>
+        <nav>
+            <button class="nav-btn active" id="btn-nav-home" onclick="switchPage('homeView', this)">🏠 Home & Tools</button>
+            <button class="nav-btn" id="btn-nav-topics" onclick="switchPage('topicsView', this)">🧪 Simulators & Interactive Lab</button>
+            <button class="nav-btn" id="btn-nav-formulas" onclick="switchPage('formulasView', this)">📖 Formula Reference</button>
+            <button class="nav-btn" id="btn-nav-quizzes" onclick="switchPage('quizzesView', this)">📝 Quizzes</button>
+        </nav>
+        <div class="tracker-badge">
+            ⏱️ Time on site: <span id="timeTracker">00:00:00</span>
+        </div>
+    </header>
+    <div class="container">
+        <!-- PAGE 1: HOME, CALCULATOR, MUSIC & NOTES -->
+        <div id="homeView" class="page-view active">
+            
+            <div class="welcome-banner">
+                <h1>Hello! Welcome to the Interactive PhysicsLab Platform 👋</h1>
+                <p>Here you will find visual simulators for mechanics, pulleys, wave phenomena, optics, and electricity, along with formula guides and useful study tools.</p>
+                <button class="btn-start-hero" onclick="goToSimulators()">Start Learning! 🚀</button>
+            </div>
+            <div class="dashboard-grid">
+                
+                <!-- SCIENTIFIC CALCULATOR -->
+                <div class="calc-wrapper">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-blue);">🧮 Scientific Calculator</h3>
+                    <input type="text" id="calcDisplay" class="calc-display" readonly value="0">
+                    <div class="calc-grid">
+                        <button class="calc-btn clear" onclick="clearCalc()">C</button>
+                        <button class="calc-btn fn" onclick="calcFunc('sin')">sin</button>
+                        <button class="calc-btn fn" onclick="calcFunc('cos')">cos</button>
+                        <button class="calc-btn fn" onclick="calcFunc('sqrt')">√</button>
+                        <button class="calc-btn" onclick="appendCalc('7')">7</button>
+                        <button class="calc-btn" onclick="appendCalc('8')">8</button>
+                        <button class="calc-btn" onclick="appendCalc('9')">9</button>
+                        <button class="calc-btn op" onclick="appendCalc('/')">/</button>
+                        <button class="calc-btn" onclick="appendCalc('4')">4</button>
+                        <button class="calc-btn" onclick="appendCalc('5')">5</button>
+                        <button class="calc-btn" onclick="appendCalc('6')">6</button>
+                        <button class="calc-btn op" onclick="appendCalc('*')">*</button>
+                        <button class="calc-btn" onclick="appendCalc('1')">1</button>
+                        <button class="calc-btn" onclick="appendCalc('2')">2</button>
+                        <button class="calc-btn" onclick="appendCalc('3')">3</button>
+                        <button class="calc-btn op" onclick="appendCalc('-')">-</button>
+                        <button class="calc-btn" onclick="appendCalc('0')">0</button>
+                        <button class="calc-btn" onclick="appendCalc('.')">.</button>
+                        <button class="calc-btn op" onclick="solveCalc()">=</button>
+                        <button class="calc-btn op" onclick="appendCalc('+')">+</button>
+                    </div>
+                </div>
+                <!-- FOCUS STUDY MUSIC -->
+                <div class="music-wrapper">
+                    <h3 style="margin-bottom: 0.8rem; color: var(--accent-pink);">🎵 Study Focus Music</h3>
+                    <div class="track-info">
+                        <div id="musicTitle" class="track-title">Lo-Fi Physics Chill</div>
+                        <div id="musicArtist" class="track-artist">Study Lounge Audio • Track 1</div>
+                    </div>
+                    <div class="visualizer-box" id="visualizer">
+                        <div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div>
+                        <div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div>
+                        <div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div>
+                    </div>
+                    <div class="audio-controls">
+                        <button class="audio-btn play-btn" id="playAudioBtn" onclick="togglePlayMusic()">▶</button>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin-bottom: 1rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">🔈 Volume</span>
+                        <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7" style="max-width: 130px;">
+                    </div>
+                    <div class="playlist">
+                        <div class="playlist-item active" onclick="selectTrack(0)">
+                            <span>🎧 Track 1: Lo-Fi Study Beats</span>
+                            <span style="color: var(--text-secondary);">Ambient</span>
+                        </div>
+                    </div>
+                    <audio id="audioPlayer" loop></audio>
+                </div>
+                <!-- NOTES AREA -->
+                <div class="notes-wrapper">
+                    <h3 style="color: var(--accent-green);">📓 Quick Notes & Solutions</h3>
+                    <textarea id="notesArea" class="notes-area" placeholder="Write your formulas, notes, and problem solutions here..."></textarea>
+                    <button class="btn-action" style="background: var(--accent-green);" onclick="saveNotes()">💾 Save Notes</button>
+                    <div id="notesStatus" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-green);"></div>
+                </div>
+            </div>
+        </div>
+        <!-- PAGE 2: TOPICS & INTERACTIVE SIMULATORS -->
+        <div id="topicsView" class="page-view">
+            
+            <div class="category-filter">
+                <button class="cat-btn active" onclick="filterCategory('all')">All Topics</button>
+                <button class="cat-btn" onclick="filterCategory('kinematics')">Kinematics & Density</button>
+                <button class="cat-btn" onclick="filterCategory('mechanics')">Mechanics & Pulleys</button>
+                <button class="cat-btn" onclick="filterCategory('waves')">Waves & Optics</button>
+                <button class="cat-btn" onclick="filterCategory('electricity')">Electricity</button>
+            </div>
+            <div class="modules-grid">
+                <!-- SIMULATOR 1: DENSITY -->
+                <div class="card" id="card-density" data-cat="kinematics">
+                    <div class="card-header">
+                        <h2 class="card-title val-cyan">1. Density & Buoyancy Simulator</h2>
+                        <button class="fullscreen-btn" onclick="toggleFullscreen('card-density')">⛶ Fullscreen</button>
+                    </div>
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="densityCanvas"></canvas>
+                        </div>
+                        <div class="controls" style="margin-top: 1rem;">
+                            <div class="control-row">
+                                <label>Mass ($m$): <b id="denMassLabel" style="color: var(--accent-cyan);">5.0</b> kg</label>
+                                <input type="range" id="denMassSlider" min="1.0" max="25.0" step="0.5" value="5.0">
+                            </div>
+                            <div class="control-row">
+                                <label>Volume ($V$): <b id="denVolLabel" style="color: var(--accent-yellow);">4.0</b> L ($10^{-3}\text{m}^3$)</label>
+                                <input type="range" id="denVolSlider" min="1.0" max="10.0" step="0.5" value="4.0">
+                            </div>
+                        </div>
+                        <div class="stats-box" style="margin-top: 1rem;">
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Mass ($m$)</span>
+                                <span id="denMass" class="stat-value val-cyan">5.0 kg</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Volume ($V$)</span>
+                                <span id="denVol" class="stat-value val-yellow">4.0 L</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Density ($\rho$)</span>
+                                <span id="denVal" class="stat-value val-green">1.25 kg/L</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="formula-box">
+                            <div class="formula-main">$$\rho = \frac{m}{V}, \quad m = \rho \cdot V, \quad F_A = \rho_{liquid} \cdot g \cdot V_{sub}$$</div>
+                            <ul>
+                                <li><b>$$\rho$$:</b> Body density ($\text{kg/m}^3$ or $\text{kg/L}$)</li>
+                                <li><b>$$F_A$$:</b> Archimedes buoyant force ($N$)</li>
+                                <li><b>Floating condition:</b> If $\rho \le 1.0 \, \text{kg/L}$ — the object floats in water.</li>
+                            </ul>
+                        </div>
+                        <div class="helpful-links-container">
+                            <div class="links-title">🔗 Useful Resources on Density:</div>
+                            <div class="link-grid">
+                                <a href="https://phet.colorado.edu/sims/html/density/latest/density_all.html" target="_blank">🧪 PhET Density Simulator</a>
+                                <a href="https://phet.colorado.edu/sims/html/buoyancy/latest/buoyancy_all.html" target="_blank">🌊 PhET Buoyancy Force</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- SIMULATOR 2: SPEED & MOTION -->
+                <div class="card" id="card-speed" data-cat="kinematics">
+                    <div class="card-header">
+                        <h2 class="card-title val-green">2. Speed & Uniform Motion Simulator</h2>
+                        <button class="fullscreen-btn" onclick="toggleFullscreen('card-speed')">⛶ Fullscreen</button>
+                    </div>
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="speedCanvas"></canvas>
+                        </div>
+                        <div class="controls" style="margin-top: 1rem;">
+                            <div class="control-row">
+                                <label>Speed ($v$): <b id="spValLabel">15</b> m/s</label>
+                                <input type="range" id="spValSlider" min="5" max="40" step="1" value="15">
+                            </div>
+                            <div class="control-row">
+                                <label>Time ($t$): <b id="spTimeLabel">4.0</b> s</label>
+                                <input type="range" id="spTimeSlider" min="1.0" max="10.0" step="0.5" value="4.0">
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
+                                <button class="btn-action" onclick="startSpeedSim()">▶ Start Motion</button>
+                                <button class="btn-action" style="background: #475569;" onclick="resetSpeedSim()">↺ Reset</button>
+                            </div>
+                        </div>
+                        <div class="stats-box" style="margin-top: 1rem;">
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Speed ($v$)</span>
+                                <span id="speedVal" class="stat-value val-green">15 m/s</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Time ($t$)</span>
+                                <span id="speedTime" class="stat-value val-yellow">4.0 s</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Distance ($s$)</span>
+                                <span id="speedDist" class="stat-value val-pink">60 m</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="formula-box">
+                            <div class="formula-main">$$s = v \cdot t, \quad v = \frac{s}{t}, \quad v_{avg} = \frac{s_{total}}{t_{total}}$$</div>
+                            <ul>
+                                <li><b>$$v$$:</b> Speed ($\text{m/s}$) | <b>$$s$$:</b> Distance covered ($\text{m}$)</li>
+                            </ul>
+                        </div>
+                        <div class="helpful-links-container">
+                            <div class="links-title">🔗 Useful Resources on Kinematics:</div>
+                            <div class="link-grid">
+                                <a href="https://phet.colorado.edu/en/simulations/moving-man" target="_blank">🧪 PhET Moving Man</a>
+                                <a href="https://en.wikipedia.org/wiki/Speed" target="_blank">📖 Wikipedia: Speed</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- SIMULATOR 3: PULLEY SYSTEMS & MECH -->
+                <div class="card" id="card-pulley" data-cat="mechanics">
+                    <div class="card-header">
+                        <h2 class="card-title val-pink">3. Pulleys & Simple Machines Simulator</h2>
+                        <button class="fullscreen-btn" onclick="toggleFullscreen('card-pulley')">⛶ Fullscreen</button>
+                    </div>
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="pulleyCanvas"></canvas>
+                        </div>
+                        <div class="controls" style="margin-top: 1rem;">
+                            <div class="control-row">
+                                <label>Load Mass ($m$): <b id="pMassLabel">10</b> kg</label>
+                                <input type="range" id="pMassSlider" min="2" max="50" step="2" value="10">
+                            </div>
+                            <div class="control-row">
+                                <label>Pulley Type: <b>Movable Pulley (2x Mechanical Advantage)</b></label>
+                            </div>
+                        </div>
+                        <div class="stats-box" style="margin-top: 1rem;">
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Weight ($P = mg$)</span>
+                                <span id="pWeightVal" class="stat-value val-pink">98.1 N</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Required Force ($F$)</span>
+                                <span id="pForceVal" class="stat-value val-yellow">49.0 N</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Force Advantage</span>
+                                <span class="stat-value val-green">2x</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="formula-box">
+                            <div class="formula-main">$$F = \frac{m \cdot g}{2}, \quad W = F \cdot s, \quad \eta = \frac{W_{useful}}{W_{total}} \cdot 100\%$$</div>
+                            <ul>
+                                <li><b>Fixed Pulley:</b> Provides no force advantage, only changes the force direction.</li>
+                                <li><b>Movable Pulley:</b> Provides a 2x force advantage ($F = \frac{P}{2}$), but requires twice as much rope distance.</li>
+                            </ul>
+                        </div>
+                        <div class="helpful-links-container">
+                            <div class="links-title">🔗 Useful Resources on Mechanics & Pulleys:</div>
+                            <div class="link-grid">
+                                <a href="https://en.wikipedia.org/wiki/Pulley" target="_blank">📖 Wikipedia: Simple Machines</a>
+                                <a href="https://phet.colorado.edu/en/simulations/balancing-act" target="_blank">⚖️ PhET Balancing Act</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- SIMULATOR 4: WAVES -->
+                <div class="card" id="card-waves" data-cat="waves">
+                    <div class="card-header">
+                        <h2 class="card-title val-cyan">4. Wave Phenomena & Oscillations Simulator</h2>
+                        <button class="fullscreen-btn" onclick="toggleFullscreen('card-waves')">⛶ Fullscreen</button>
+                    </div>
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="wavesCanvas"></canvas>
+                        </div>
+                        <div class="controls" style="margin-top: 1rem;">
+                            <div class="control-row">
+                                <label>Frequency ($f$): <b id="waveFreqLabel">1.5</b> Hz</label>
+                                <input type="range" id="waveFreqSlider" min="0.5" max="4.0" step="0.1" value="1.5">
+                            </div>
+                            <div class="control-row">
+                                <label>Amplitude ($A$): <b id="waveAmpLabel">30</b> px</label>
+                                <input type="range" id="waveAmpSlider" min="10" max="60" step="5" value="30">
+                            </div>
+                        </div>
+                        <div class="stats-box" style="margin-top: 1rem;">
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Period ($T = 1/f$)</span>
+                                <span id="wavePeriodVal" class="stat-value val-cyan">0.67 s</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Wavelength ($\lambda$)</span>
+                                <span id="waveLenVal" class="stat-value val-yellow">133 px</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="formula-box">
+                            <div class="formula-main">$$v = \lambda \cdot f, \quad T = \frac{1}{f}, \quad x(t) = A \cdot \sin(\omega t + \phi_0)$$</div>
+                            <ul>
+                                <li><b>$$\lambda$$:</b> Wavelength ($\text{m}$) | <b>$$f$$:</b> Frequency ($\text{Hz}$)</li>
+                                <li><b>$$T$$:</b> Oscillation period ($\text{s}$) | <b>$$A$$:</b> Amplitude</li>
+                            </ul>
+                        </div>
+                        <div class="helpful-links-container">
+                            <div class="links-title">🔗 Useful Resources on Waves:</div>
+                            <div class="link-grid">
+                                <a href="https://phet.colorado.edu/en/simulations/wave-on-a-string" target="_blank">🧪 PhET Wave on a String</a>
+                                <a href="https://phet.colorado.edu/en/simulations/wave-interference" target="_blank">🌊 PhET Wave Interference</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- SIMULATOR 5: OPTICS -->
+                <div class="card" id="card-optics" data-cat="waves">
+                    <div class="card-header">
+                        <h2 class="card-title val-purple">5. Geometric Optics & Refraction Simulator</h2>
+                        <button class="fullscreen-btn" onclick="toggleFullscreen('card-optics')">⛶ Fullscreen</button>
+                    </div>
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="opticsCanvas"></canvas>
+                        </div>
+                        <div class="controls" style="margin-top: 1rem;">
+                            <div class="control-row">
+                                <label>Angle of Incidence ($\alpha$): <b id="optAngleLabel">45</b>°</label>
+                                <input type="range" id="optAngleSlider" min="5" max="80" step="1" value="45">
+                            </div>
+                            <div class="control-row">
+                                <label>Refractive Index ($n_2$): <b id="optNLabel">1.50</b> (Glass)</label>
+                                <input type="range" id="optNSlider" min="1.00" max="2.42" step="0.05" value="1.50">
+                            </div>
+                        </div>
+                        <div class="stats-box" style="margin-top: 1rem;">
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Angle of Incidence ($\alpha$)</span>
+                                <span id="optAngVal" class="stat-value val-purple">45°</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Angle of Refraction ($\beta$)</span>
+                                <span id="optRefractVal" class="stat-value val-yellow">28.1°</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="formula-box">
+                            <div class="formula-main">$$n_1 \cdot \sin\alpha = n_2 \cdot \sin\beta, \quad \frac{1}{F} = \frac{1}{d} + \frac{1}{f_0}$$</div>
+                            <ul>
+                                <li><b>Snell's Law:</b> The ratio of the sines of the angles of incidence and refraction equals the ratio of the refractive indices.</li>
+                                <li><b>Thin Lens Formula:</b> Relates focal length $F$ with object distance $d$ and image distance $f_0$.</li>
+                            </ul>
+                        </div>
+                        <div class="helpful-links-container">
+                            <div class="links-title">🔗 Useful Resources on Optics:</div>
+                            <div class="link-grid">
+                                <a href="https://phet.colorado.edu/en/simulations/bending-light" target="_blank">🧪 PhET Bending Light</a>
+                                <a href="https://phet.colorado.edu/en/simulations/geometric-optics" target="_blank">🔍 PhET Geometric Optics</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- SIMULATOR 6: ELECTRIC CIRCUIT -->
+                <div class="card" id="card-electricity" data-cat="electricity">
+                    <div class="card-header">
+                        <h2 class="card-title val-yellow">6. Electric Circuits & Ohm's Law</h2>
+                        <button class="fullscreen-btn" onclick="toggleFullscreen('card-electricity')">⛶ Fullscreen</button>
+                    </div>
+                    <div>
+                        <div class="canvas-container">
+                            <canvas id="elecCanvas"></canvas>
+                        </div>
+                        <div class="controls" style="margin-top: 1rem;">
+                            <div class="control-row">
+                                <label>Voltage ($U$): <b id="voltLabel">12</b> V</label>
+                                <input type="range" id="voltSlider" min="1" max="24" step="1" value="12">
+                            </div>
+                            <div class="control-row">
+                                <label>Resistance ($R$): <b id="resLabel">4</b> Ω</label>
+                                <input type="range" id="resSlider" min="1" max="20" step="1" value="4">
+                            </div>
+                        </div>
+                        <div class="stats-box" style="margin-top: 1rem;">
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Voltage ($U$)</span>
+                                <span id="voltVal" class="stat-value val-yellow">12 V</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Current ($I$)</span>
+                                <span id="currVal" class="stat-value val-cyan">3.0 A</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Power ($P$)</span>
+                                <span id="powVal" class="stat-value val-pink">36 W</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="formula-box">
+                            <div class="formula-main">$$I = \frac{U}{R}, \quad P = U \cdot I, \quad W = U \cdot I \cdot t$$</div>
+                            <ul>
+                                <li><b>$$I$$:</b> Current ($A$) | <b>$$U$$:</b> Voltage ($V$) | <b>$$R$$:</b> Electrical resistance ($\Omega$)</li>
+                            </ul>
+                        </div>
+                        <div class="helpful-links-container">
+                            <div class="links-title">🔗 Useful Resources on Electricity:</div>
+                            <div class="link-grid">
+                                <a href="https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc" target="_blank">🧪 PhET Circuit Construction Kit</a>
+                                <a href="https://phet.colorado.edu/sims/html/ohms-law/latest/ohms-law_all.html" target="_blank">⚡ PhET Ohm's Law</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- PAGE 3: EXPANDED FORMULAS REFERENCE -->
+        <div id="formulasView" class="page-view">
+            <h2 style="margin-bottom: 1.5rem;">📖 Expanded Physics Formula Reference</h2>
+            <div class="modules-grid">
+                
+                <div class="card">
+                    <h3 class="val-cyan">1. Kinematics & Density</h3>
+                    <div class="formula-box">
+                        <div class="formula-main">$$\rho = \frac{m}{V}, \quad m = \rho \cdot V, \quad V = \frac{m}{\rho}$$</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-main">$$v = \frac{s}{t}, \quad s = v \cdot t, \quad a = \frac{v - v_0}{t}$$</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="val-pink">2. Mechanics & Pulleys</h3>
+                    <div class="formula-box">
+                        <div class="formula-main">$$F_{movable} = \frac{F_{gravity}}{2}, \quad M = F \cdot d, \quad \eta = \frac{W_{useful}}{W_{total}}$$</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-main">$$F_{elastic} = k \cdot \Delta x, \quad E_k = \frac{m \cdot v^2}{2}, \quad E_p = m \cdot g \cdot h$$</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="val-purple">3. Waves & Geometric Optics</h3>
+                    <div class="formula-box">
+                        <div class="formula-main">$$v = \lambda \cdot f, \quad T = \frac{1}{f}, \quad n = \frac{c}{v}$$</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-main">$$n_1 \sin\alpha = n_2 \sin\beta, \quad D = \frac{1}{F} = \frac{1}{d} + \frac{1}{f_0}$$</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="val-yellow">4. Electricity & Ohm's Law</h3>
+                    <div class="formula-box">
+                        <div class="formula-main">$$I = \frac{U}{R}, \quad R = \rho_{conductor} \cdot \frac{l}{S}$$</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-main">$$P = U \cdot I = I^2 \cdot R = \frac{U^2}{R}, \quad Q = I^2 \cdot R \cdot t$$</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- PAGE 4: QUIZZES -->
+        <div id="quizzesView" class="page-view">
+            <h2 style="margin-bottom: 1rem;">📝 Knowledge Assessment & Tests</h2>
+            <div class="category-filter">
+                <button class="cat-btn active" onclick="filterQuizCategory('all')">General Final Test</button>
+                <button class="cat-btn" onclick="filterQuizCategory('kinematics')">Kinematics & Density</button>
+                <button class="cat-btn" onclick="filterQuizCategory('mechanics')">Pulleys & Mechanics</button>
+                <button class="cat-btn" onclick="filterQuizCategory('waves')">Waves & Optics</button>
+                <button class="cat-btn" onclick="filterQuizCategory('electricity')">Electricity</button>
+            </div>
+            <div id="quizContainer">
+                <!-- GENERAL FINAL TEST -->
+                <div class="quiz-card" data-mode="all">
+                    <div class="quiz-question">1. [Mechanics] What mechanical advantage does a single movable pulley provide?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_all1" value="a"> 2x force advantage</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_all1" value="b"> No force advantage</label>
+                    </div>
+                </div>
+                <div class="quiz-card" data-mode="all">
+                    <div class="quiz-question">2. [Optics] How does the angle of refraction change when light moves from air into water?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_all2" value="a"> The angle of refraction decreases (bends toward the normal)</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_all2" value="b"> The angle of refraction increases</label>
+                    </div>
+                </div>
+                <div class="quiz-card" data-mode="all">
+                    <div class="quiz-question">3. [Electricity] According to Ohm's law, if voltage increases while resistance remains constant, what happens to the current?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_all3" value="a"> Current increases proportionally ($I = U/R$)</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_all3" value="b"> Current decreases</label>
+                    </div>
+                </div>
+
+                <!-- CATEGORY: KINEMATICS & DENSITY -->
+                <div class="quiz-card hidden" data-mode="topic" data-qcat="kinematics">
+                    <div class="quiz-question">1. [Density] What happens if an object's density is less than the liquid's density?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_k1" value="a"> The object will float on the surface</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_k1" value="b"> The object will sink to the bottom</label>
+                    </div>
+                </div>
+
+                <!-- CATEGORY: PULLEYS & MECHANICS -->
+                <div class="quiz-card hidden" data-mode="topic" data-qcat="mechanics">
+                    <div class="quiz-question">1. [Pulleys] If a load weighs 100 N and you use a single movable pulley, how much effort force do you need to lift it?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_m1" value="a"> 50 N</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_m1" value="b"> 100 N</label>
+                    </div>
+                </div>
+
+                <!-- CATEGORY: WAVES & OPTICS -->
+                <div class="quiz-card hidden" data-mode="topic" data-qcat="waves">
+                    <div class="quiz-question">1. [Waves] What is the relationship between frequency ($f$) and period ($T$)?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_w1" value="a"> $T = 1 / f$</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_w1" value="b"> $T = f^2$</label>
+                    </div>
+                </div>
+                <div class="quiz-card hidden" data-mode="topic" data-qcat="waves">
+                    <div class="quiz-question">2. [Optics] What is Snell's Law formula for refraction?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_w2" value="a"> $n_1 \sin\alpha = n_2 \sin\beta$</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_w2" value="b"> $F = m \cdot a$</label>
+                    </div>
+                </div>
+
+                <!-- CATEGORY: ELECTRICITY -->
+                <div class="quiz-card hidden" data-mode="topic" data-qcat="electricity">
+                    <div class="quiz-question">1. [Electricity] What is the unit of electrical resistance?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_e1" value="a"> Ohm ($\Omega$)</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_e1" value="b"> Volt ($V$)</label>
+                    </div>
+                </div>
+                <div class="quiz-card hidden" data-mode="topic" data-qcat="electricity">
+                    <div class="quiz-question">2. [Electricity] Which formula represents electrical power?</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option-label"><input type="radio" name="q_e2" value="a"> $P = U \cdot I$</label>
+                        <label class="quiz-option-label"><input type="radio" name="q_e2" value="b"> $P = m \cdot g$</label>
+                    </div>
+                </div>
+
+                <button class="quiz-submit-btn" onclick="checkQuiz()">Check Answers</button>
+                <div id="quizResult" style="margin-top: 1rem; font-size: 1.2rem; font-weight: 800;"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Fullscreen Toggle
+        function toggleFullscreen(elementId) {
+            const el = document.getElementById(elementId);
+            if (!document.fullscreenElement) {
+                if (el.requestFullscreen) el.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        document.addEventListener("fullscreenchange", () => {
+            setTimeout(renderSimulations, 100);
+        });
+        // Math KaTeX Render Trigger
+        function triggerMathRender() {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+        }
+        // Navigation
+        function switchPage(pageId, btnEl) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if (btnEl) btnEl.classList.add('active');
+            triggerMathRender();
+            if (pageId === 'topicsView') {
+                setTimeout(renderSimulations, 50);
+            }
+        }
+        // Action from Welcome Button
+        function goToSimulators() {
+            const btn = document.getElementById('btn-nav-topics');
+            switchPage('topicsView', btn);
+        }
+        // Category Filter for Topics
+        function filterCategory(cat) {
+            document.querySelectorAll('.category-filter .cat-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.modules-grid .card').forEach(card => {
+                if (cat === 'all' || card.dataset.cat === cat) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            setTimeout(renderSimulations, 50);
+        }
+        // Category Filter for Quizzes
+        function filterQuizCategory(cat) {
+            document.querySelectorAll('#quizzesView .cat-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.quiz-card').forEach(card => {
+                if (cat === 'all') {
+                    if (card.dataset.mode === 'all') card.classList.remove('hidden');
+                    else card.classList.add('hidden');
+                } else {
+                    if (card.dataset.mode === 'topic' && card.dataset.qcat === cat) card.classList.remove('hidden');
+                    else card.classList.add('hidden');
+                }
+            });
+            document.getElementById('quizResult').textContent = '';
+            triggerMathRender();
+        }
+        // Quiz Checker
+        function checkQuiz() {
+            const visibleCards = Array.from(document.querySelectorAll('.quiz-card')).filter(card => !card.classList.contains('hidden'));
+            let score = 0;
+            let total = visibleCards.length;
+            visibleCards.forEach(card => {
+                const radio = card.querySelector('input[type="radio"]:checked');
+                if (!radio) return;
+                if (radio.name === 'q_all1' && radio.value === 'a') score++;
+                if (radio.name === 'q_all2' && radio.value === 'a') score++;
+                if (radio.name === 'q_all3' && radio.value === 'a') score++;
+                if (radio.name === 'q_k1' && radio.value === 'a') score++;
+                if (radio.name === 'q_m1' && radio.value === 'a') score++;
+                if (radio.name === 'q_w1' && radio.value === 'a') score++;
+                if (radio.name === 'q_w2' && radio.value === 'a') score++;
+                if (radio.name === 'q_e1' && radio.value === 'a') score++;
+                if (radio.name === 'q_e2' && radio.value === 'a') score++;
+            });
+            const res = document.getElementById('quizResult');
+            res.textContent = `Your Score: ${score} out of ${total}`;
+            res.style.color = (score === total && total > 0) ? 'var(--accent-green)' : 'var(--accent-yellow)';
+        }
+        // Time Tracker
+        let secondsSpent = 0;
+        setInterval(() => {
+            secondsSpent++;
+            const hrs = String(Math.floor(secondsSpent / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((secondsSpent % 3600) / 60)).padStart(2, '0');
+            const secs = String(secondsSpent % 60).padStart(2, '0');
+            document.getElementById('timeTracker').textContent = `${hrs}:${mins}:${secs}`;
+        }, 1000);
+        // Canvas Setup Helper
+        function setupCanvas(canvas) {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            return canvas.getContext('2d');
+        }
+        // --- SIMULATOR 1: DENSITY ---
+        const densityCanvas = document.getElementById('densityCanvas');
+        const denMassSlider = document.getElementById('denMassSlider');
+        const denVolSlider = document.getElementById('denVolSlider');
+        function drawDensity() {
+            const ctx = setupCanvas(densityCanvas);
+            const w = densityCanvas.width, h = densityCanvas.height;
+            const m = parseFloat(denMassSlider.value);
+            const V = parseFloat(denVolSlider.value);
+            const rho = m / V;
+            document.getElementById('denMassLabel').textContent = m.toFixed(1);
+            document.getElementById('denVolLabel').textContent = V.toFixed(1);
+            document.getElementById('denMass').textContent = m.toFixed(1) + ' kg';
+            document.getElementById('denVol').textContent = V.toFixed(1) + ' L';
+            document.getElementById('denVal').textContent = rho.toFixed(2) + ' kg/L';
+            ctx.clearRect(0, 0, w, h);
+            const waterLevelY = h * 0.4;
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.35)';
+            ctx.fillRect(20, waterLevelY, w - 40, h - waterLevelY - 20);
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(20, waterLevelY, w - 40, h - waterLevelY - 20);
+            const boxSide = Math.min(80, 25 + V * 5);
+            const cX = w / 2 - boxSide / 2;
+            let boxY = waterLevelY - (boxSide * (1 - Math.min(1, rho)));
+            if (rho > 1.0) {
+                const sinkProgress = Math.min(1, (rho - 1.0) / 2);
+                boxY = waterLevelY + sinkProgress * (h - waterLevelY - boxSide - 25);
+            }
+            ctx.fillStyle = rho <= 1.0 ? '#10b981' : '#ef4444';
+            ctx.fillRect(cX, boxY, boxSide, boxSide);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(cX, boxY, boxSide, boxSide);
+            // Floating Mass & Density Badge
+            ctx.fillStyle = 'rgba(0,0,0,0.75)';
+            ctx.fillRect(cX - 15, boxY - 22, boxSide + 30, 18);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`m: ${m.toFixed(1)}kg | ρ: ${rho.toFixed(2)}`, cX + boxSide/2, boxY - 9);
+        }
+        denMassSlider.addEventListener('input', drawDensity);
+        denVolSlider.addEventListener('input', drawDensity);
+
+        // --- SIMULATOR 2: SPEED & MOTION ---
+        const speedCanvas = document.getElementById('speedCanvas');
+        const spValSlider = document.getElementById('spValSlider');
+        const spTimeSlider = document.getElementById('spTimeSlider');
+        let speedAnimId = null;
+        let currentAnimTime = 0;
+        let isSpeedRunning = false;
+        function drawSpeedFrame() {
+            const ctx = setupCanvas(speedCanvas);
+            const w = speedCanvas.width, h = speedCanvas.height;
+            const v = parseFloat(spValSlider.value);
+            const targetT = parseFloat(spTimeSlider.value);
+            const totalS = v * targetT;
+            document.getElementById('spValLabel').textContent = v;
+            document.getElementById('spTimeLabel').textContent = targetT.toFixed(1);
+            document.getElementById('speedVal').textContent = v + ' m/s';
+            document.getElementById('speedTime').textContent = targetT.toFixed(1) + ' s';
+            document.getElementById('speedDist').textContent = totalS.toFixed(1) + ' m';
+            ctx.clearRect(0, 0, w, h);
+            
+            // Road setup
+            const carWidth = 55;
+            const carHeight = 30;
+            const targetBoxWidth = 35;
+            const targetBoxHeight = 50;
+            
+            const startX = 40;
+            const targetBoxX = w - 60 - targetBoxWidth; // Position of destination rectangle
+            const endX = targetBoxX; // Car stops exactly when touching the box
+            const roadY = h - 40;
+
+            // Draw Road
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(startX, roadY);
+            ctx.lineTo(w - 30, roadY);
+            ctx.stroke();
+
+            // Draw Destination Rectangle (Finish Line/Block)
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(targetBoxX, roadY - targetBoxHeight, targetBoxWidth, targetBoxHeight);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(targetBoxX, roadY - targetBoxHeight, targetBoxWidth, targetBoxHeight);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('FINISH', targetBoxX + targetBoxWidth / 2, roadY - targetBoxHeight / 2 + 4);
+
+            // Car Position Calculation
+            const progress = Math.min(1, currentAnimTime / targetT);
+            const carX = startX + progress * (endX - startX);
+
+            // Draw Larger Car
+            // Body
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(carX, roadY - carHeight, carWidth, carHeight - 8);
+            // Cabin
+            ctx.fillStyle = '#06b6d4';
+            ctx.fillRect(carX + 10, roadY - carHeight - 10, carWidth - 22, 12);
+            // Wheels
+            ctx.fillStyle = '#090d16';
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.arc(carX + 12, roadY - 4, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(carX + carWidth - 12, roadY - 4, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            if (isSpeedRunning && currentAnimTime < targetT) {
+                currentAnimTime += 0.03;
+                speedAnimId = requestAnimationFrame(drawSpeedFrame);
+            } else {
+                isSpeedRunning = false;
+            }
+        }
+        function startSpeedSim() {
+            cancelAnimationFrame(speedAnimId);
+            currentAnimTime = 0;
+            isSpeedRunning = true;
+            drawSpeedFrame();
+        }
+        function resetSpeedSim() {
+            cancelAnimationFrame(speedAnimId);
+            isSpeedRunning = false;
+            currentAnimTime = 0;
+            drawSpeedFrame();
+        }
+        spValSlider.addEventListener('input', resetSpeedSim);
+        spTimeSlider.addEventListener('input', resetSpeedSim);
+
+        // --- SIMULATOR 3: PULLEY SYSTEM ---
+        const pulleyCanvas = document.getElementById('pulleyCanvas');
+        const pMassSlider = document.getElementById('pMassSlider');
+        function drawPulley() {
+            const ctx = setupCanvas(pulleyCanvas);
+            const w = pulleyCanvas.width, h = pulleyCanvas.height;
+            const m = parseFloat(pMassSlider.value);
+            const weight = m * 9.81;
+            const force = weight / 2;
+            document.getElementById('pMassLabel').textContent = m;
+            document.getElementById('pWeightVal').textContent = weight.toFixed(1) + ' N';
+            document.getElementById('pForceVal').textContent = force.toFixed(1) + ' N';
+            ctx.clearRect(0, 0, w, h);
+            const cX = w / 2;
+            // Ceiling
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(cX - 100, 20, 200, 10);
+            // Ropes & Movable Pulley
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(cX - 40, 30);
+            ctx.lineTo(cX - 40, h - 90);
+            ctx.arc(cX, h - 90, 40, Math.PI, 0, true);
+            ctx.lineTo(cX + 40, 50);
+            ctx.stroke();
+            // Pulley Wheel
+            ctx.fillStyle = '#475569';
+            ctx.beginPath();
+            ctx.arc(cX, h - 90, 30, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#f8fafc';
+            ctx.stroke();
+            // Load Weight
+            ctx.fillStyle = '#ec4899';
+            ctx.fillRect(cX - 25, h - 60, 50, 40);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${m} kg`, cX, h - 35);
+        }
+        pMassSlider.addEventListener('input', drawPulley);
+        // --- SIMULATOR 4: WAVES ---
+        const wavesCanvas = document.getElementById('wavesCanvas');
+        const waveFreqSlider = document.getElementById('waveFreqSlider');
+        const waveAmpSlider = document.getElementById('waveAmpSlider');
+        let waveTime = 0;
+        function drawWaves() {
+            const ctx = setupCanvas(wavesCanvas);
+            const w = wavesCanvas.width, h = wavesCanvas.height;
+            const freq = parseFloat(waveFreqSlider.value);
+            const amp = parseFloat(waveAmpSlider.value);
+            document.getElementById('waveFreqLabel').textContent = freq.toFixed(1);
+            document.getElementById('waveAmpLabel').textContent = amp;
+            document.getElementById('wavePeriodVal').textContent = (1 / freq).toFixed(2) + ' s';
+            document.getElementById('waveLenVal').textContent = Math.round(200 / freq) + ' px';
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let x = 0; x < w; x++) {
+                const y = h / 2 + Math.sin((x * 0.03 * freq) - waveTime) * amp;
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            waveTime += 0.08;
+            requestAnimationFrame(drawWaves);
+        }
+        // --- SIMULATOR 5: OPTICS ---
+        const opticsCanvas = document.getElementById('opticsCanvas');
+        const optAngleSlider = document.getElementById('optAngleSlider');
+        const optNSlider = document.getElementById('optNSlider');
+        function drawOptics() {
+            const ctx = setupCanvas(opticsCanvas);
+            const w = opticsCanvas.width, h = opticsCanvas.height;
+            const alphaDeg = parseFloat(optAngleSlider.value);
+            const n2 = parseFloat(optNSlider.value);
+            const alphaRad = alphaDeg * (Math.PI / 180);
+            const sinBeta = Math.sin(alphaRad) / n2;
+            const betaRad = Math.asin(sinBeta);
+            const betaDeg = betaRad * (180 / Math.PI);
+            document.getElementById('optAngleLabel').textContent = alphaDeg;
+            document.getElementById('optNLabel').textContent = n2.toFixed(2);
+            document.getElementById('optAngVal').textContent = alphaDeg + '°';
+            document.getElementById('optRefractVal').textContent = betaDeg.toFixed(1) + '°';
+            ctx.clearRect(0, 0, w, h);
+            const cX = w / 2, cY = h / 2;
+            // Media 2 (Glass/Water)
+            ctx.fillStyle = 'rgba(139, 92, 246, 0.2)';
+            ctx.fillRect(0, cY, w, h / 2);
+            // Boundary
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, cY); ctx.lineTo(w, cY); ctx.stroke();
+            // Normal
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = '#94a3b8';
+            ctx.beginPath(); ctx.moveTo(cX, 20); ctx.lineTo(cX, h - 20); ctx.stroke();
+            ctx.setLineDash([]);
+            // Incident Ray
+            const rayLen = 140;
+            const inX = cX - Math.sin(alphaRad) * rayLen;
+            const inY = cY - Math.cos(alphaRad) * rayLen;
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(inX, inY); ctx.lineTo(cX, cY); ctx.stroke();
+            // Refracted Ray
+            const outX = cX + Math.sin(betaRad) * rayLen;
+            const outY = cY + Math.cos(betaRad) * rayLen;
+            ctx.strokeStyle = '#3b82f6';
+            ctx.beginPath(); ctx.moveTo(cX, cY); ctx.lineTo(outX, outY); ctx.stroke();
+        }
+        optAngleSlider.addEventListener('input', drawOptics);
+        optNSlider.addEventListener('input', drawOptics);
+        // --- SIMULATOR 6: ELECTRIC CIRCUIT ---
+        const elecCanvas = document.getElementById('elecCanvas');
+        const voltSlider = document.getElementById('voltSlider');
+        const resSlider = document.getElementById('resSlider');
+        let electronPos = 0;
+        function drawElectricity() {
+            const ctx = setupCanvas(elecCanvas);
+            const w = elecCanvas.width, h = elecCanvas.height;
+            const U = parseFloat(voltSlider.value);
+            const R = parseFloat(resSlider.value);
+            const I = U / R;
+            const P = U * I;
+            document.getElementById('voltLabel').textContent = U;
+            document.getElementById('resLabel').textContent = R;
+            document.getElementById('voltVal').textContent = U + ' V';
+            document.getElementById('currVal').textContent = I.toFixed(2) + ' A';
+            document.getElementById('powVal').textContent = P.toFixed(1) + ' W';
+            ctx.clearRect(0, 0, w, h);
+            const padX = 50, padY = 40;
+            const cW = w - padX * 2, cH = h - padY * 2;
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(padX, padY, cW, cH);
+            // Battery
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(padX - 10, padY + cH/2 - 25, 20, 50);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(padX - 15, padY + cH/2 - 15); ctx.lineTo(padX + 15, padY + cH/2 - 15);
+            ctx.moveTo(padX - 8, padY + cH/2 + 15); ctx.lineTo(padX + 8, padY + cH/2 + 15);
+            ctx.stroke();
+            // Bulb
+            const bulbX = padX + cW, bulbY = padY + cH/2;
+            ctx.fillStyle = `rgba(245, 158, 11, ${Math.min(1, P / 40)})`;
+            ctx.beginPath();
+            ctx.arc(bulbX, bulbY, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#f8fafc';
+            ctx.stroke();
+            // Electrons Flow
+            electronPos += I * 0.8;
+            if (electronPos > 1000) electronPos = 0;
+            ctx.fillStyle = '#06b6d4';
+            const totalPerimeter = (cW + cH) * 2;
+            for (let i = 0; i < 12; i++) {
+                let p = (electronPos + (i * (totalPerimeter / 12))) % totalPerimeter;
+                let ex = 0, ey = 0;
+                if (p < cW) { ex = padX + p; ey = padY; }
+                else if (p < cW + cH) { ex = padX + cW; ey = padY + (p - cW); }
+                else if (p < cW * 2 + cH) { ex = padX + cW - (p - (cW + cH)); ey = padY + cH; }
+                else { ex = padX; ey = padY + cH - (p - (cW * 2 + cH)); }
+                ctx.beginPath();
+                ctx.arc(ex, ey, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            requestAnimationFrame(drawElectricity);
+        }
+        // --- STUDY MUSIC PLAYER LOGIC ---
+        const audioTracks = [
+            {
+                title: "Lo-Fi Physics Chill",
+                artist: "Study Lounge Beats • Relaxing Ambient",
+                url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+            }
+        ];
+        let currentTrackIdx = 0;
+        let isMusicPlaying = false;
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playAudioBtn = document.getElementById('playAudioBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        function loadTrack(index) {
+            currentTrackIdx = index;
+            audioPlayer.src = audioTracks[index].url;
+            document.getElementById('musicTitle').textContent = audioTracks[index].title;
+            document.getElementById('musicArtist').textContent = audioTracks[index].artist;
+            document.querySelectorAll('.playlist-item').forEach((item, idx) => {
+                if (idx === index) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+        }
+        function togglePlayMusic() {
+            if (isMusicPlaying) {
+                audioPlayer.pause();
+                playAudioBtn.textContent = '▶';
+                isMusicPlaying = false;
+                toggleVisualizer(false);
+            } else {
+                audioPlayer.play().then(() => {
+                    playAudioBtn.textContent = '⏸';
+                    isMusicPlaying = true;
+                    toggleVisualizer(true);
+                }).catch(() => {
+                    alert('Click anywhere on the page to allow audio playback!');
+                });
+            }
+        }
+        function selectTrack(index) {
+            loadTrack(index);
+            if (isMusicPlaying) audioPlayer.play();
+        }
+        function toggleVisualizer(active) {
+            document.querySelectorAll('.v-bar').forEach(bar => {
+                if (active) bar.classList.add('active');
+                else bar.classList.remove('active');
+            });
+        }
+        volumeSlider.addEventListener('input', (e) => { audioPlayer.volume = e.target.value; });
+        // --- CALCULATOR LOGIC ---
+        let calcVal = '0';
+        function updateCalc() { document.getElementById('calcDisplay').value = calcVal; }
+        function clearCalc() { calcVal = '0'; updateCalc(); }
+        function appendCalc(char) {
+            if (calcVal === '0' && char !== '.') calcVal = char;
+            else calcVal += char;
+            updateCalc();
+        }
+        function calcFunc(fn) {
+            try {
+                let num = eval(calcVal);
+                if (fn === 'sin') calcVal = String(Math.sin(num));
+                if (fn === 'cos') calcVal = String(Math.cos(num));
+                if (fn === 'sqrt') calcVal = String(Math.sqrt(num));
+                updateCalc();
+            } catch(e) { calcVal = 'Error'; updateCalc(); }
+        }
+        function solveCalc() {
+            try { calcVal = String(eval(calcVal)); } catch(e) { calcVal = 'Error'; }
+            updateCalc();
+        }
+        // --- NOTES LOGIC ---
+        function saveNotes() {
+            localStorage.setItem('physics_notes', document.getElementById('notesArea').value);
+            document.getElementById('notesStatus').textContent = '✅ Notes saved successfully!';
+            setTimeout(() => document.getElementById('notesStatus').textContent = '', 2000);
+        }
+        function renderSimulations() {
+            drawDensity();
+            resetSpeedSim();
+            drawPulley();
+            drawOptics();
+        }
+        window.addEventListener('load', () => {
+            renderSimulations();
+            drawWaves();
+            drawElectricity();
+            loadTrack(0);
+            triggerMathRender();
+            filterQuizCategory('all');
+            document.getElementById('notesArea').value = localStorage.getItem('physics_notes') || '';
+        });
+        window.addEventListener('resize', renderSimulations);
+    </script>
+</body>
+</html>
